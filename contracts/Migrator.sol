@@ -15,7 +15,7 @@ contract Migrator {
     event Migrate(address indexed from, Kashi indexed kashi0, Kashi indexed kashi1, address pair);
 
     constructor(address _factory, address _WETH) public {
-        factory = _factory;
+        factory = _factory; // default factory
         WETH = _WETH;
     }
 
@@ -58,6 +58,41 @@ contract Migrator {
         kashi0.addAsset(msg.sender, true, share0);
 
         (, , uint256 share1) = _deposit(kashi1.bentoBox(), address(kashi1), token1);
+        kashi1.addAsset(msg.sender, true, share1);
+
+        emit Migrate(msg.sender, kashi0, kashi1, pair);
+    }
+
+    /// @notice Migrate caller UniswapV2 or Sushiswap LpToken to Kashi
+    /// assuming caller approved this contract using caller's LpToken
+    /// @dev args are in no particular order
+    /// @param kashi0 kashi0
+    /// @param kashi1 kashi1
+    /// @param factory_ UniswapV2 or Sushiswap factory if zero address,use default factory
+    function migrateLpToKashi(
+        Kashi kashi0,
+        Kashi kashi1,
+        address factory_
+    ) public {
+        address asset0 = address(kashi0.asset());
+        address asset1 = address(kashi1.asset());
+        address token0 = asset0 == address(0) ? WETH : asset0;
+        address token1 = asset1 == address(0) ? WETH : asset1;
+
+        address pair = IUniswapV2Factory(factory_ == address(0) ? factory : factory_).getPair(token0, token1);
+        require(pair != address(0));
+        IUniswapV2Pair pool = IUniswapV2Pair(pair);
+
+        // --- redeem instead of caller---
+        uint256 amount = pool.balanceOf(msg.sender);
+        pool.transferFrom(msg.sender, address(this), amount);
+        _redeemLpToken(pool, amount);
+
+        // --- deposit and add asset ---
+        (, , uint256 share0) = _deposit(kashi0.bentoBox(), address(kashi0), asset0);
+        kashi0.addAsset(msg.sender, true, share0);
+
+        (, , uint256 share1) = _deposit(kashi1.bentoBox(), address(kashi1), asset1);
         kashi1.addAsset(msg.sender, true, share1);
 
         emit Migrate(msg.sender, kashi0, kashi1, pair);
