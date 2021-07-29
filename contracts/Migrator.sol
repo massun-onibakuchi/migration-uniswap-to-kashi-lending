@@ -24,8 +24,8 @@ contract Migrator {
     /// @dev args are in no particular order, but kashi assets and tokens must be paired
     /// @param kashi0 kashi0
     /// @param kashi1 kashi1
-    /// @param tokenA uniswapV2 tokenA (if ETH, the address equals to WETH)
-    /// @param tokenB uniswapV2 tokenB (if ETH, the address equals to WETH)
+    /// @param tokenA uniswapV2 tokenA (if ETH, the address must equal to WETH)
+    /// @param tokenB uniswapV2 tokenB (if ETH, the address must equal to WETH)
     function migrateLpToKashi(
         Kashi kashi0,
         Kashi kashi1,
@@ -58,6 +58,40 @@ contract Migrator {
         kashi0.addAsset(msg.sender, true, share0);
 
         (, , uint256 share1) = _deposit(kashi1.bentoBox(), address(kashi1), token1);
+        kashi1.addAsset(msg.sender, true, share1);
+
+        emit Migrate(msg.sender, kashi0, kashi1, pair);
+    }
+
+    /// @notice Migrate caller UniswapV2-like LpToken to Kashi
+    /// assuming caller approved this contract using caller's LpToken
+    /// @dev args are in no particular order
+    /// @param kashi0 kashi0
+    /// @param kashi1 kashi1
+    function migrateLpToKashi(
+        Kashi kashi0,
+        Kashi kashi1,
+        address factory_
+    ) public {
+        address asset0 = address(kashi0.asset());
+        address asset1 = address(kashi1.asset());
+        address token0 = asset0 == address(0) ? WETH : asset0;
+        address token1 = asset1 == address(0) ? WETH : asset1;
+
+        address pair = IUniswapV2Factory(factory_ == address(0) ? factory : factory_).getPair(token0, token1);
+        require(pair != address(0));
+        IUniswapV2Pair pool = IUniswapV2Pair(pair);
+
+        // --- redeem instead of caller---
+        uint256 amount = pool.balanceOf(msg.sender);
+        pool.transferFrom(msg.sender, address(this), amount);
+        _redeemLpToken(pool, amount);
+
+        // --- deposit and add asset ---
+        (, , uint256 share0) = _deposit(kashi0.bentoBox(), address(kashi0), asset0);
+        kashi0.addAsset(msg.sender, true, share0);
+
+        (, , uint256 share1) = _deposit(kashi1.bentoBox(), address(kashi1), asset1);
         kashi1.addAsset(msg.sender, true, share1);
 
         emit Migrate(msg.sender, kashi0, kashi1, pair);
