@@ -19,6 +19,13 @@ contract Migrator {
         WETH = _WETH;
     }
 
+    /// @notice Migrate caller UniswapV2-like LpToken to Kashi
+    /// assuming caller approved this contract using caller's LpToken
+    /// @dev args are in no particular order, but kashi assets and tokens must be paired
+    /// @param kashi0 kashi0
+    /// @param kashi1 kashi1
+    /// @param tokenA uniswapV2 tokenA (if ETH, the address equals to WETH)
+    /// @param tokenB uniswapV2 tokenB (if ETH, the address equals to WETH)
     function migrateLpToKashi(
         Kashi kashi0,
         Kashi kashi1,
@@ -62,18 +69,29 @@ contract Migrator {
         address assetA,
         address assetB
     ) internal view {
-        require((assetA == tokenA && assetB == tokenB) || (assetA == tokenB && assetB == tokenA), "invalid-asset-address-pair");
+        require(
+            (assetA == tokenA && assetB == tokenB) || (assetA == tokenB && assetB == tokenA),
+            "invalid-asset-address-pair"
+        );
         require(tokenA != tokenB, "identical-address");
     }
 
-    /// @notice assuming caller approve this contract
-    /// @dev Explain to a developer any extra details
-    /// assuming Lp token is transfered to this contract
+    /// @notice assuming caller approved this contract
+    /// @dev call pair directly. assuming Lp token is transfered to this contract
+    /// underlying tokens (tokenA,tokenB) are transfered to this contract.
     function _redeemLpToken(IUniswapV2Pair pair, uint256 amount) internal {
         pair.transfer(address(pair), amount);
         pair.burn(address(this));
     }
 
+    /// @notice deposit asset to bentoBox
+    /// @dev asset is ERC20 or eth
+    /// @param bentoBox bentobox to deposit
+    /// @param to receiver that receives interest bearing token
+    /// @param asset if eth, zero addrss
+    /// @return value eth amount which transfer to bentoBox
+    /// @return amount asset amount to deposit
+    /// @return share interest bearing token amount
     function _deposit(
         IBentoBoxV1 bentoBox,
         address to,
@@ -87,7 +105,7 @@ contract Migrator {
         )
     {
         (value, amount, share) = _getAmountToDeposit(bentoBox, asset);
-        IERC20(asset).approve(address(bentoBox),amount);
+        IERC20(asset).approve(address(bentoBox), amount);
         bentoBox.deposit{ value: value }(IERC20(asset), address(this), to, amount, 0);
     }
 
