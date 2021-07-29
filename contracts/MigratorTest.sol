@@ -6,7 +6,7 @@ import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 import "./Migrator.sol";
 
 contract MigratorTest is Migrator {
-    constructor(address _factory, address _WETH) public Migrator(_factory, _WETH) {}
+    constructor(address _WETH) public Migrator(_WETH) {}
 
     /// @notice assuming caller approve this contract
     /// @dev Explain to a developer any extra details

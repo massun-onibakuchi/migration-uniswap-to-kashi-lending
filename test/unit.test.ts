@@ -14,7 +14,6 @@ import {
 
 use(require("chai-bignumber")());
 
-const overrides = { gasLimit: 9500000 };
 const toWei = ethers.utils.parseEther;
 const getEvents = async (contract: Contract, tx: ContractTransaction) => {
     const receipt = await ethers.provider.getTransactionReceipt(tx.hash);
@@ -70,7 +69,6 @@ describe("Test", async function () {
         pair = (await ethers.getContractAt("UniswapV2Pair", pairAddr)) as IUniswapV2Pair;
 
         migrator = (await Migrator.deploy(
-            factory.address,
             "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2", // WETH
         )) as MigratorTest;
 
@@ -85,7 +83,6 @@ describe("Test", async function () {
             [token0, token1],
         );
         // expect(await bentoBox.masterContractOf(kashi0.address)).to.eq(masterContract.address);
-
         // add initial liquidity
         await addLiquidity(lp, pair, token0, token1, INITIAL_AMOUNT);
     });
@@ -163,19 +160,19 @@ describe("Test", async function () {
         expect(await bentoBox.balanceOf(token0.address, kashi0.address)).to.eq(amount);
         expect(await kashi0.balanceOf(wallet.address)).not.to.eq(0);
     });
-    const migrateLpToKashi = async (signer, kashi0, kashi1, tokenA, tokenB, factory = ethers.constants.AddressZero) => {
+    const migrateLpToKashi = async (signer, kashi0, kashi1, tokenA, tokenB, factory) => {
         await addLiquidity(signer, pair, tokenA, tokenB);
         await pair.approve(migrator.address, await pair.balanceOf(signer.address));
-        await migrator.migrateLpToKashi(kashi0.address, kashi1.address, factory);
+        await migrator.migrateLpToKashi(kashi0.address, kashi1.address, factory.address);
     };
     it("migrateLpToKashi:correct order of arguments", async function () {
-        await migrateLpToKashi(wallet, kashi0, kashi1, token0, token1);
+        await migrateLpToKashi(wallet, kashi0, kashi1, token0, token1, factory);
         expect(await token0.balanceOf(migrator.address)).to.eq(0);
         expect(await bentoBox.balanceOf(token0.address, kashi0.address)).to.eq(amount);
         expect(await kashi0.balanceOf(wallet.address)).not.to.eq(0);
     });
     it("migrateLpToKashi:Reverse order of arguments", async function () {
-        await migrateLpToKashi(wallet, kashi0, kashi1, token1, token0);
+        await migrateLpToKashi(wallet, kashi0, kashi1, token1, token0, factory);
 
         expect(await token0.balanceOf(migrator.address)).to.eq(0);
         expect(await bentoBox.balanceOf(token0.address, kashi0.address)).to.eq(amount);
