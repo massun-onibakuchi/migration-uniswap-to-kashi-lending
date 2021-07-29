@@ -163,10 +163,10 @@ describe("Test", async function () {
         expect(await bentoBox.balanceOf(token0.address, kashi0.address)).to.eq(amount);
         expect(await kashi0.balanceOf(wallet.address)).not.to.eq(0);
     });
-    const migrateLpToKashi = async (signer, kashi0, kashi1, tokenA, tokenB) => {
+    const migrateLpToKashi = async (signer, kashi0, kashi1, tokenA, tokenB, factory = ethers.constants.AddressZero) => {
         await addLiquidity(signer, pair, tokenA, tokenB);
         await pair.approve(migrator.address, await pair.balanceOf(signer.address));
-        await migrator.migrateLpToKashi(kashi0.address, kashi1.address, tokenA.address, tokenB.address);
+        await migrator.migrateLpToKashi(kashi0.address, kashi1.address, factory);
     };
     it("migrateLpToKashi:correct order of arguments", async function () {
         await migrateLpToKashi(wallet, kashi0, kashi1, token0, token1);

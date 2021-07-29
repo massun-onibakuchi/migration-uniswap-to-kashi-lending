@@ -26,7 +26,7 @@ contract Migrator {
     /// @param kashi1 kashi1
     /// @param tokenA uniswapV2 tokenA (if ETH, the address must equal to WETH)
     /// @param tokenB uniswapV2 tokenB (if ETH, the address must equal to WETH)
-    function migrateLpToKashi(
+    function migrateLpToKashiWithTokens(
         Kashi kashi0,
         Kashi kashi1,
         address tokenA,
