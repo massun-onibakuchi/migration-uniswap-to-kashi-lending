@@ -15,7 +15,7 @@ contract Migrator {
     event Migrate(address indexed from, Kashi indexed kashi0, Kashi indexed kashi1, address pair);
 
     constructor(address _factory, address _WETH) public {
-        factory = _factory;
+        factory = _factory; // default factory
         WETH = _WETH;
     }
 
@@ -63,11 +63,12 @@ contract Migrator {
         emit Migrate(msg.sender, kashi0, kashi1, pair);
     }
 
-    /// @notice Migrate caller UniswapV2-like LpToken to Kashi
+    /// @notice Migrate caller UniswapV2 or Sushiswap LpToken to Kashi
     /// assuming caller approved this contract using caller's LpToken
     /// @dev args are in no particular order
     /// @param kashi0 kashi0
     /// @param kashi1 kashi1
+    /// @param factory_ UniswapV2 or Sushiswap factory if zero address,use default factory
     function migrateLpToKashi(
         Kashi kashi0,
         Kashi kashi1,
