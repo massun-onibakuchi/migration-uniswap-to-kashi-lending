@@ -6,6 +6,7 @@ import "hardhat-typechain";
 import "hardhat-deploy";
 import "hardhat-etherscan-abi";
 import "hardhat-dependency-compiler";
+import "solidity-coverage";
 
 const MAINNET_ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY;
 const ROPSTEN_ALCHEMY_API_KEY = process.env.ROPSTEN_ALCHEMY_API_KEY;

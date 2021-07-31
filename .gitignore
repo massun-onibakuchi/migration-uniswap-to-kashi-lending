@@ -1,7 +1,19 @@
 /node_modules
-cache
-artifacts
-typechain
+
+# env variables
 .env
-test/NFT.sol
-test/NFTMangager.sol
+
+# logg
+*.log
+
+# hardhat
+artifacts
+cache
+typechain
+
+# macOS
+.DS_Store
+
+# Coverage directory used by tools like istanbul
+coverage
+coverage.json
