@@ -21,8 +21,7 @@ contract MigratorTest is Migrator {
     }
 
     function depositAndAddAsset(Kashi kashi, address asset) public {
-        (, , uint256 share) = _deposit(kashi.bentoBox(), address(kashi), asset);
-        kashi.addAsset(msg.sender, true, share);
+        _depositAndAddAsset(kashi, asset);
     }
 
     function cookWithData(

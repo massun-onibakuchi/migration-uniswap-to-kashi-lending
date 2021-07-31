@@ -11,7 +11,7 @@ import "hardhat/console.sol";
 contract Migrator {
     address public immutable WETH;
 
-    event Migrate(address indexed from, Kashi indexed kashi0, Kashi indexed kashi1, address pair);
+    event Migrate(address indexed from, Kashi indexed kashi0, Kashi indexed kashi1, uint LpTokens);
 
     constructor(address _WETH) public {
         WETH = _WETH;
@@ -43,13 +43,10 @@ contract Migrator {
         _redeemLpToken(pool, amount);
 
         // --- deposit and add asset ---
-        (, , uint256 share0) = _deposit(kashi0.bentoBox(), address(kashi0), asset0);
-        kashi0.addAsset(msg.sender, true, share0);
+        _depositAndAddAsset(kashi0, asset0);
+        _depositAndAddAsset(kashi1, asset1);
 
-        (, , uint256 share1) = _deposit(kashi1.bentoBox(), address(kashi1), asset1);
-        kashi1.addAsset(msg.sender, true, share1);
-
-        emit Migrate(msg.sender, kashi0, kashi1, pair);
+        emit Migrate(msg.sender, kashi0, kashi1, amount);
     }
 
     /// @notice assuming caller approved this contract
@@ -58,6 +55,11 @@ contract Migrator {
     function _redeemLpToken(IUniswapV2Pair pair, uint256 amount) internal {
         pair.transfer(address(pair), amount);
         pair.burn(address(this));
+    }
+
+    function _depositAndAddAsset(Kashi kashi, address asset) internal {
+        (, , uint256 share) = _deposit(kashi.bentoBox(), address(kashi), asset);
+        kashi.addAsset(msg.sender, true, share);
     }
 
     /// @notice deposit asset to bentoBox
