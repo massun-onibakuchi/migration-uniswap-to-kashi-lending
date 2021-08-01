@@ -30,10 +30,11 @@ contract Migrator {
     ) public {
         address asset0 = address(kashi0.asset());
         address asset1 = address(kashi1.asset());
-        address token0 = asset0 == address(0) ? WETH : asset0;
-        address token1 = asset1 == address(0) ? WETH : asset1;
-
-        address pair = IUniswapV2Factory(factory).getPair(token0, token1);
+        address pair =
+            IUniswapV2Factory(factory).getPair(
+                asset0 == address(0) ? WETH : asset0,
+                asset1 == address(0) ? WETH : asset1
+            );
         require(pair != address(0));
         IUniswapV2Pair pool = IUniswapV2Pair(pair);
 
