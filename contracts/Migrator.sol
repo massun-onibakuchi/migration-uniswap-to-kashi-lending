@@ -11,7 +11,7 @@ import "hardhat/console.sol";
 contract Migrator {
     address public immutable WETH;
 
-    event Migrate(address indexed from, Kashi indexed kashi0, Kashi indexed kashi1, uint LpTokens);
+    event Migrate(address indexed from, Kashi indexed kashi0, Kashi indexed kashi1, uint256 LpTokens);
 
     constructor(address _WETH) public {
         WETH = _WETH;
@@ -83,7 +83,9 @@ contract Migrator {
         )
     {
         (value, amount, share) = _getAmountToDeposit(bentoBox, asset);
-        IERC20(asset).approve(address(bentoBox), amount);
+        if (asset != address(0)) {
+            IERC20(asset).approve(address(bentoBox), amount);
+        }
         bentoBox.deposit{ value: value }(IERC20(asset), address(this), to, amount, 0);
     }
 
