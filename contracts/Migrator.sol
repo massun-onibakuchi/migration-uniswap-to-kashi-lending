@@ -11,7 +11,7 @@ import "hardhat/console.sol";
 contract Migrator {
     address public immutable WETH;
 
-    event Migrate(address indexed from, Kashi indexed kashi0, Kashi indexed kashi1, uint256 LpTokens);
+    event Migrate(address indexed from, IUniswapV2Pair indexed pair);
 
     constructor(address _WETH) public {
         WETH = _WETH;
@@ -30,31 +30,30 @@ contract Migrator {
     ) public {
         address asset0 = address(kashi0.asset());
         address asset1 = address(kashi1.asset());
-        address pair =
+        address pairAddr =
             IUniswapV2Factory(factory).getPair(
                 asset0 == address(0) ? WETH : asset0,
                 asset1 == address(0) ? WETH : asset1
             );
-        require(pair != address(0));
-        IUniswapV2Pair pool = IUniswapV2Pair(pair);
+        require(pairAddr != address(0));
+        IUniswapV2Pair pair = IUniswapV2Pair(pairAddr);
 
         // --- redeem instead of caller---
-        uint256 amount = pool.balanceOf(msg.sender);
-        pool.transferFrom(msg.sender, address(this), amount);
-        _redeemLpToken(pool, amount);
+        pair.transferFrom(msg.sender, address(this), pair.balanceOf(msg.sender));
+        _redeemLpToken(pair);
 
         // --- deposit and add asset ---
         _depositAndAddAsset(kashi0, asset0);
         _depositAndAddAsset(kashi1, asset1);
 
-        emit Migrate(msg.sender, kashi0, kashi1, amount);
+        emit Migrate(msg.sender, pair);
     }
 
     /// @notice assuming caller approved this contract
     /// @dev call pair directly. assuming Lp token is transfered to this contract
     /// underlying tokens (tokenA,tokenB) are transfered to this contract.
-    function _redeemLpToken(IUniswapV2Pair pair, uint256 amount) internal {
-        pair.transfer(address(pair), amount);
+    function _redeemLpToken(IUniswapV2Pair pair) internal {
+        pair.transfer(address(pair), pair.balanceOf(address(this)));
         pair.burn(address(this));
     }
 
